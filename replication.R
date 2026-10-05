@@ -1,8 +1,8 @@
-# Réplication tableau par tableau
-# Placer ce script et les trois CSV dans le même dossier.
-# Exécuter les blocs dans R/RStudio ou lancer :
+# Table-by-table replication
+# Place this script and the three CSV files in the same folder.
+# Run the blocks in R/RStudio, or execute:
 # source("replication.R", print.eval = TRUE)
-# Aucun export automatique : les résultats et les modèles restent dans R.
+# No automatic exports: results and fitted models remain in the R session.
 
 library(dplyr)
 library(glmmTMB)
@@ -16,7 +16,7 @@ library(performance)
 
 set.seed(123)
 
-# TABLEAU 2 — Résultats principaux
+# TABLE 2 — Main results
 
 df <- read_csv("data_without_price.csv")
 
@@ -63,7 +63,7 @@ df <- df %>%
   mutate(w_samp = w_inv * (nrow(df) / sum(w_inv)))
 
 
-# TABLEAU 1 — Statistiques descriptives de l'échantillon principal
+# TABLE 1 — Descriptive statistics for the baseline sample
 
 variables_descriptives <- df %>% select(
   OFFERS, G_CLAUSE, G_CRITERION, G_WEIGHT, P_CRITERION_WEIGHT_ENV,
@@ -82,7 +82,7 @@ mean(df$G_WEIGHT[df$G_CRITERION == 1])
 table(df$STATUS)
 table(df$REGION)
 
-# TABLEAU 2 — Estimations principales
+# TABLE 2 — Main estimates
 
 fixed_trunc_model <- glmmTMB(
   OFFERS ~ G_CLAUSE + G_WEIGHT + ALLOTMENT + FRAMEWORK_AGREEMENT + 
@@ -124,8 +124,8 @@ r2(random_trunc_model_quad)
 
 
 
-# TABLEAU 3 — Hétérogénéité par secteur
-# Échantillon principal ; effets fixes CPV à trois chiffres.
+# TABLE 3 — Sector heterogeneity
+# Baseline sample; three-digit CPV fixed effects.
 
 # CPV 45
 df_45 <- df %>% filter(CPV2 == "45")
@@ -178,18 +178,18 @@ robust_sector_33 <- model_parameters(sector_33, robust = TRUE)
 print(robust_sector_33)
 nobs(sector_33)
 
-# ANNEXE B — Matrice de corrélation
+# APPENDIX B — Correlation matrix
 correlation_matrix <- cor(df %>% select(
   OFFERS, G_CLAUSE, G_WEIGHT, P_CRITERION_WEIGHT_ENV,
   ALLOTMENT, FRAMEWORK_AGREEMENT
 ))
 print(round(correlation_matrix, 2))
 
-# ANNEXE C — Hétérogénéité par type d'acheteur
-# Poids recalculés pour chaque type ; intercept aléatoire CPV.
-# STATUS n'entre pas dans la formule : il est constant dans le sous-échantillon.
+# APPENDIX C — Heterogeneity by buyer type
+# Weights recalculated within each buyer type; CPV random intercept.
+# STATUS is omitted from the formula because it is constant within the subsample.
 
-# Departement
+# Department
 df_departement <- df %>% filter(STATUS == "Departement") %>%
   mutate(CPV = droplevels(factor(CPV)), REGION = droplevels(REGION)) %>%
   group_by(CAE_SIREN) %>% mutate(n_siren = n()) %>% ungroup() %>%
@@ -202,7 +202,7 @@ buyer_departement <- glmmTMB(
   data = df_departement, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_departement$sdr$pdHess)) {
   buyer_departement_retry <- tryCatch(
     update(buyer_departement, control = glmmTMBControl(
@@ -230,7 +230,7 @@ buyer_local_agency <- glmmTMB(
   data = df_local_agency, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_local_agency$sdr$pdHess)) {
   buyer_local_agency_retry <- tryCatch(
     update(buyer_local_agency, control = glmmTMBControl(
@@ -258,7 +258,7 @@ buyer_municipal_federation <- glmmTMB(
   data = df_municipal_federation, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_municipal_federation$sdr$pdHess)) {
   buyer_municipal_federation_retry <- tryCatch(
     update(buyer_municipal_federation, control = glmmTMBControl(
@@ -286,7 +286,7 @@ buyer_municipality <- glmmTMB(
   data = df_municipality, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_municipality$sdr$pdHess)) {
   buyer_municipality_retry <- tryCatch(
     update(buyer_municipality, control = glmmTMBControl(
@@ -314,7 +314,7 @@ buyer_national_agency <- glmmTMB(
   data = df_national_agency, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_national_agency$sdr$pdHess)) {
   buyer_national_agency_retry <- tryCatch(
     update(buyer_national_agency, control = glmmTMBControl(
@@ -342,7 +342,7 @@ buyer_region <- glmmTMB(
   data = df_region, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_region$sdr$pdHess)) {
   buyer_region_retry <- tryCatch(
     update(buyer_region, control = glmmTMBControl(
@@ -370,7 +370,7 @@ buyer_state <- glmmTMB(
   data = df_state, weights = w_samp,
   family = truncated_nbinom2(), ziformula = ~0
 )
-# Même solution de repli que dans le script d'hétérogénéité fourni.
+# Same optimizer fallback as in the supplied heterogeneity script.
 if (!isTRUE(buyer_state$sdr$pdHess)) {
   buyer_state_retry <- tryCatch(
     update(buyer_state, control = glmmTMBControl(
@@ -385,8 +385,8 @@ robust_buyer_state <- model_parameters(buyer_state, robust = TRUE)
 print(robust_buyer_state)
 nobs(buyer_state)
 
-# ANNEXE C — Tests Q d'hétérogénéité des coefficients
-# Tests sur estimations séparées, supposées indépendantes.
+# APPENDIX C — Coefficient heterogeneity Q tests
+# Tests based on separate estimates, assumed to be independent.
 buyer_coefficients <- bind_rows(
   as.data.frame(robust_buyer_departement) %>% mutate(buyer_type = "departement",
     convergence_code = buyer_departement$fit$convergence,
@@ -434,7 +434,7 @@ for (parameter in c("G_CLAUSE", "G_WEIGHT")) {
   }
 }
 print(bind_rows(q_tests))
-# ANNEXE D — Tirages d'un lot par contrat (1 000 réplications)
+# APPENDIX D — One-lot-per-contract draws (1,000 replications)
 
 set.seed(123)
 
@@ -482,10 +482,10 @@ df <- df %>%
 df <- df %>%
   mutate(w_samp = w_inv * (nrow(df) / sum(w_inv)))
 
-plan(multisession, workers = 4) # Ajuster au nombre de cœurs et à la mémoire disponibles
+plan(multisession, workers = 4) # Adjust to the available number of cores and memory
 
-# Les poids calculés sur l'échantillon complet sont conservés après tirage.
-# Les deux fonctions ci-dessous sont celles du bloc de rééchantillonnage initial.
+# Weights calculated on the full sample are retained after each draw.
+# The two functions below come from the original resampling block.
 sample_one_per_contract <- function(data, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   data %>%
@@ -570,8 +570,8 @@ x_limits <- results_clean_plot %>%
     xmax = max(max(Coefficient), 0)
   )
 
-# La ligne pleine représente la moyenne, comme dans le code initial.
-# La légende du manuscrit qui parle de médiane doit être harmonisée séparément.
+# The solid line represents the mean, as in the original code.
+# The manuscript caption referring to the median needs to be aligned separately.
 ggplot(results_clean_plot, aes(x = Coefficient)) +
   geom_histogram(bins = 50, fill = "grey60", color = "white", alpha = 0.8) +
   geom_vline(
@@ -604,7 +604,7 @@ ggplot(results_clean_plot, aes(x = Coefficient)) +
 
 plan(sequential)
 
-# ANNEXES E ET F — Modèles de propension et estimations repondérées
+# APPENDICES E AND F — Propensity models and reweighted estimates
 
 set.seed(123)
 
@@ -671,7 +671,7 @@ mlogit_fit <- multinom(
   data = df
 )
 
-# ANNEXE E — Régression multinomiale : instruments binaires
+# APPENDIX E — Multinomial regression: binary instruments
 summary(mlogit_fit)
 
 pr <- predict(mlogit_fit, type = "probs")
@@ -696,8 +696,8 @@ df <- df %>%
     w_final_norm_gc = w_final_gc * (n() / sum(w_final_gc, na.rm = TRUE))
   )
 
-# ANNEXE F — Estimation repondérée : instruments binaires
-# Famille NON tronquée conservée, conformément au script initial.
+# APPENDIX F — Reweighted estimates: binary instruments
+# The NONTRUNCATED family is retained, matching the original script.
 random_intercept_dr_gc <- glmmTMB(
   OFFERS ~ G_CLAUSE + G_CRITERION + ALLOTMENT +
     FRAMEWORK_AGREEMENT + P_CRITERION_WEIGHT_ENV +
@@ -750,7 +750,7 @@ mlogit_fit_cont <- multinom(
   maxit = 1000
 )
 
-# ANNEXE E — Régression multinomiale : catégories de poids environnemental
+# APPENDIX E — Multinomial regression: environmental-weight categories
 summary(mlogit_fit_cont)
 
 pr_cont <- predict(mlogit_fit_cont, type = "probs")
@@ -799,7 +799,7 @@ df <- df %>%
     w_final_norm_clause_cont = w_final_clause_cont * (n() / sum(w_final_clause_cont, na.rm = TRUE))
   )
 
-# ANNEXE F — Estimations repondérées : poids linéaire et quadratique
+# APPENDIX F — Reweighted estimates: linear and quadratic environmental weight
 random_intercept_dr_cont <- glmmTMB(
   OFFERS ~ G_CLAUSE + G_WEIGHT + 
     ALLOTMENT + FRAMEWORK_AGREEMENT + P_CRITERION_WEIGHT_ENV +
@@ -828,8 +828,8 @@ print(robust_random_intercept_dr_cont_quad)
 
 
 
-# ANNEXE G — Contrôle du prix du lot
-# AWARD_PRICE est déjà en logarithme dans le CSV : ne pas le transformer à nouveau.
+# APPENDIX G — Controlling for lot price
+# AWARD_PRICE is already logged in the CSV: do not transform it again.
 
 set.seed(123)
 
@@ -904,7 +904,7 @@ print(robust_random_trunc_model_price)
 
 set.seed(123)
 
-# ANNEXE H — Sensibilité à la restriction du nombre d'offres
+# APPENDIX H — Sensitivity to the bid-count restriction
 
 df <- read_csv("data_without_price_extended.csv")
 
@@ -951,8 +951,8 @@ df <- df %>%
   mutate(w_samp = w_inv * (nrow(df) / sum(w_inv)))
 
 
-# Utiliser TOUT le fichier élargi, pas uniquement les lignes au-delà de 10 offres.
-# Le filtre amont au niveau des contrats n'est pas réappliqué à ce CSV préparé.
+# Use the ENTIRE extended dataset, not only observations above ten offers.
+# The upstream contract-level filter is not reapplied to this prepared CSV.
 
 extended_fixed_trunc_model <- glmmTMB(
   OFFERS ~ G_CLAUSE + G_WEIGHT + ALLOTMENT + FRAMEWORK_AGREEMENT + 
@@ -989,7 +989,3 @@ extended_random_trunc_model_quad <- glmmTMB(
 robust_extended_random_trunc_model_quad <- model_parameters(extended_random_trunc_model_quad, robust = TRUE)
 print(robust_extended_random_trunc_model_quad)
 r2(extended_random_trunc_model_quad)
-
-
-
-
